@@ -9,8 +9,7 @@ from flask import Flask
 import threading
 
 
-TOKEN = "你的密钥"
-
+TOKEN = "8963882812:AAHrWlaMpZnXmwH5t4huisscec2Wlj9hT4I"
 
 
 # ======================
@@ -69,12 +68,18 @@ def run_web():
 
 
 
-# 开启网页端口
+# 启动Flask网页
 threading.Thread(
-    target=run_web
+    target=run_web,
+    daemon=True
 ).start()
 
 
 
-# 启动机器人
+# ======================
+# 启动Telegram机器人
+# ======================
+
+print("⚡ 赛亚人起源机器人启动成功")
+
 app.run_polling()
