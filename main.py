@@ -13,15 +13,20 @@ import threading
 from config import TOKEN
 
 
-# ======================
-# 导入功能模块
-# ======================
+# 功能模块
 
-from modules.menu import start, button
+from modules.menu import (
+    start,
+    button
+)
 
-from modules.welcome import welcome_new_member
+from modules.welcome import (
+    welcome_new_member
+)
 
-from modules.anti_spam import anti_spam
+from modules.anti_spam import (
+    anti_spam
+)
 
 from modules.admin import (
     ban,
@@ -32,8 +37,7 @@ from modules.admin import (
 
 
 # ======================
-# Flask 保活
-# Render需要
+# Render 保活网页
 # ======================
 
 web = Flask(__name__)
@@ -56,7 +60,7 @@ def run_web():
 
 
 # ======================
-# 启动机器人
+# 机器人启动
 # ======================
 
 def main():
@@ -64,15 +68,11 @@ def main():
     print("⚡ 赛亚人起源机器人启动")
 
 
-    # 创建机器人
-
     app = Application.builder().token(TOKEN).build()
 
 
 
-    # ==================
-    # 菜单
-    # ==================
+    # start菜单
 
     app.add_handler(
         CommandHandler(
@@ -82,6 +82,8 @@ def main():
     )
 
 
+    # 按钮
+
     app.add_handler(
         CallbackQueryHandler(
             button
@@ -89,10 +91,7 @@ def main():
     )
 
 
-
-    # ==================
     # 新人欢迎
-    # ==================
 
     app.add_handler(
         MessageHandler(
@@ -102,10 +101,7 @@ def main():
     )
 
 
-
-    # ==================
     # 防广告
-    # ==================
 
     app.add_handler(
         MessageHandler(
@@ -115,10 +111,7 @@ def main():
     )
 
 
-
-    # ==================
     # 管理命令
-    # ==================
 
     app.add_handler(
         CommandHandler(
@@ -144,33 +137,24 @@ def main():
     )
 
 
-
     print("✅ Bot运行中")
 
-
-
-    # 启动Telegram
 
     app.run_polling()
 
 
 
 # ======================
-# 程序入口
+# 启动
 # ======================
 
 if __name__ == "__main__":
 
-
-    # 启动Render网页
 
     threading.Thread(
         target=run_web,
         daemon=True
     ).start()
 
-
-
-    # 启动机器人
 
     main()
