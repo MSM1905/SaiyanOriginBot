@@ -12,7 +12,7 @@ from flask import Flask
 import threading
 
 
-TOKEN = "你的密钥"
+TOKEN = "8963882812:AAHrWlaMpZnXmwH5t4huisscec2Wlj9hT4I"
 
 
 # ======================
