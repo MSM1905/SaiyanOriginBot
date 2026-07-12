@@ -10,6 +10,7 @@ from telegram.ext import (
 
 from flask import Flask
 import threading
+import re
 
 
 TOKEN = "8963882812:AAHrWlaMpZnXmwH5t4huisscec2Wlj9hT4I"
@@ -61,7 +62,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text,
             reply_markup=markup
         )
-
     else:
         await update.callback_query.edit_message_text(
             text,
@@ -70,7 +70,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ======================
-# 菜单按钮处理
+# 菜单处理
 # ======================
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -109,7 +109,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]
         ]
 
-
         await query.edit_message_text(
             """
 🛡 群管理中心
@@ -117,6 +116,51 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 请选择功能：
 """,
             reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+
+    elif query.data == "welcome":
+
+        await query.edit_message_text(
+            """
+👋 欢迎新人
+
+状态：
+
+✅ 已开启
+"""
+        )
+
+
+    elif query.data == "spam":
+
+        await query.edit_message_text(
+            """
+🚫 防广告系统
+
+状态：
+
+✅ 自动检测开启
+
+检测内容：
+
+- 网站链接
+- Telegram邀请链接
+- 微信广告
+- 赌博广告
+- 刷单广告
+"""
+        )
+
+
+    elif query.data == "clean":
+
+        await query.edit_message_text(
+            """
+🧹 自动清理
+
+功能开发中...
+"""
         )
 
 
@@ -140,9 +184,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 高级功能：
 
 ⭐ AI审核
-⭐ 高级防广告
+⭐ 高级过滤
 ⭐ 数据统计
-⭐ 自动运营
 
 开发中...
 """
@@ -155,48 +198,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             """
 📊 数据统计
 
-当前暂无数据。
+暂无数据
 
 后续支持：
 
-- 群活跃统计
-- 删除记录
+- 消息统计
+- 违规记录
 - 用户排行
-"""
-        )
-
-
-    elif query.data == "welcome":
-
-        await query.edit_message_text(
-            """
-👋 欢迎新人
-
-状态：开发完成
-
-机器人已支持新人欢迎功能。
-"""
-        )
-
-
-    elif query.data == "clean":
-
-        await query.edit_message_text(
-            """
-🧹 自动清理
-
-功能开发中...
-"""
-        )
-
-
-    elif query.data == "spam":
-
-        await query.edit_message_text(
-            """
-🚫 防广告
-
-功能开发中...
 """
         )
 
@@ -208,20 +216,19 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ======================
-# 新人欢迎功能
+# 欢迎新人
 # ======================
 
 async def welcome_new_member(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE
 ):
 
     for member in update.message.new_chat_members:
 
-        name = member.first_name
-
-        text = f"""
-⚡ 欢迎 {name} 加入赛亚人起源社区！
+        await update.message.reply_text(
+            f"""
+⚡ 欢迎 {member.first_name} 加入赛亚人起源社区！
 
 📌 群规：
 
@@ -232,13 +239,97 @@ async def welcome_new_member(
 
 祝你体验愉快！
 """
-
-        await update.message.reply_text(text)
+        )
 
 
 
 # ======================
-# Flask 保活(Render)
+# 防广告系统
+# ======================
+
+BAD_WORDS = [
+    "赌博",
+    "博彩",
+    "刷单",
+    "兼职赚钱",
+    "贷款",
+    "色情",
+    "裸聊",
+    "诈骗",
+    "加微信",
+    "微信赚钱"
+]
+
+
+def is_ad(text):
+
+    if not text:
+        return False
+
+
+    text = text.lower()
+
+
+    # 检测关键词
+
+    for word in BAD_WORDS:
+
+        if word in text:
+            return True
+
+
+    # 检测网址
+
+    url_pattern = r"(https?://|www\.|t\.me/|telegram\.me/)"
+
+    if re.search(url_pattern, text):
+
+        return True
+
+
+    return False
+
+
+
+async def anti_spam(
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE
+):
+
+    if not update.message:
+        return
+
+
+    text = update.message.text
+
+
+    if is_ad(text):
+
+        try:
+
+            await update.message.delete()
+
+
+            warn = await update.message.chat.send_message(
+                f"""
+🚫 检测到广告内容
+
+用户：
+{update.message.from_user.first_name}
+
+消息已删除。
+"""
+            )
+
+
+        except Exception:
+
+            pass
+
+
+
+# ======================
+# Flask 保活
 # ======================
 
 web = Flask(__name__)
@@ -259,6 +350,7 @@ def run_web():
     )
 
 
+
 threading.Thread(
     target=run_web,
     daemon=True
@@ -267,7 +359,7 @@ threading.Thread(
 
 
 # ======================
-# 启动机器人
+# 启动
 # ======================
 
 app = Application.builder().token(TOKEN).build()
@@ -294,6 +386,17 @@ app.add_handler(
         welcome_new_member
     )
 )
+
+
+# 防广告监听文字消息
+
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        anti_spam
+    )
+)
+
 
 
 print("⚡ 赛亚人起源机器人启动成功")
