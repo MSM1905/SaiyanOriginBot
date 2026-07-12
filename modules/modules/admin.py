@@ -1,10 +1,8 @@
 from telegram import Update
+from telegram.constants import ChatPermissions
 from telegram.ext import ContextTypes
 
 
-# ======================
-# 判断管理员
-# ======================
 
 async def check_admin(update: Update):
 
@@ -19,10 +17,6 @@ async def check_admin(update: Update):
 
 
 
-# ======================
-# 封禁
-# ======================
-
 async def ban(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -33,11 +27,9 @@ async def ban(
 
 
     if not update.message.reply_to_message:
-
         await update.message.reply_text(
-            "请回复目标用户消息后使用 /ban"
+            "请回复目标用户后使用 /ban"
         )
-
         return
 
 
@@ -55,10 +47,6 @@ async def ban(
 
 
 
-# ======================
-# 禁言
-# ======================
-
 async def mute(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -69,22 +57,23 @@ async def mute(
 
 
     if not update.message.reply_to_message:
-
         await update.message.reply_text(
-            "请回复目标用户消息后使用 /mute"
+            "请回复目标用户后使用 /mute"
         )
-
         return
 
 
     user = update.message.reply_to_message.from_user
 
 
+    permissions = ChatPermissions(
+        can_send_messages=False
+    )
+
+
     await update.effective_chat.restrict_member(
         user.id,
-        permissions={
-            "can_send_messages": False
-        }
+        permissions
     )
 
 
@@ -93,10 +82,6 @@ async def mute(
     )
 
 
-
-# ======================
-# 解禁
-# ======================
 
 async def unmute(
     update: Update,
@@ -108,23 +93,24 @@ async def unmute(
 
 
     if not update.message.reply_to_message:
-
         await update.message.reply_text(
-            "请回复目标用户消息后使用 /unmute"
+            "请回复目标用户后使用 /unmute"
         )
-
         return
 
 
     user = update.message.reply_to_message.from_user
 
 
+    permissions = ChatPermissions(
+        can_send_messages=True,
+        can_send_media_messages=True
+    )
+
+
     await update.effective_chat.restrict_member(
         user.id,
-        permissions={
-            "can_send_messages": True,
-            "can_send_media_messages": True
-        }
+        permissions
     )
 
 
