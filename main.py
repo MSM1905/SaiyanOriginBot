@@ -14,7 +14,9 @@ from modules.rule_manager import (
     del_rule_command, WAITING_KEYWORD, WAITING_DURATION
 )
 
+# ======================
 # Flask 保活服务
+# ======================
 web = Flask(__name__)
 
 @web.route("/")
@@ -24,7 +26,9 @@ def home():
 def run_web():
     web.run(host="0.0.0.0", port=10000)
 
+# ======================
 # Telegram 机器人初始化
+# ======================
 app = Application.builder().token(TOKEN).build()
 
 # 基础功能
@@ -42,7 +46,7 @@ app.add_handler(CommandHandler("unmute", unmute))
 app.add_handler(CommandHandler("listrules", list_rules_command))
 app.add_handler(CommandHandler("delrule", del_rule_command))
 
-# 添加规则的多轮对话
+# 添加规则的多轮对话（已修复核心冲突）
 add_rule_conv = ConversationHandler(
     entry_points=[CommandHandler("addrule", start_add_rule)],
     states={
@@ -53,10 +57,14 @@ add_rule_conv = ConversationHandler(
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel_add_rule)],
+    per_message=True,       # 关键修复1：精准追踪按钮和文字状态，防止底层冲突
+    allow_reentry=True      # 关键修复2：允许对话中途重新触发，防止状态卡死
 )
 app.add_handler(add_rule_conv)
 
+# ======================
 # 启动入口
+# ======================
 if __name__ == "__main__":
     init_db()
     threading.Thread(target=run_web, daemon=True).start()
