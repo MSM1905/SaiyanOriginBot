@@ -1,5 +1,4 @@
-from telegram import Update
-from telegram.constants import ChatPermissions
+from telegram import Update, ChatPermissions
 from telegram.ext import ContextTypes
 
 
